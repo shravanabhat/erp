@@ -1,0 +1,34 @@
+{
+<<<<<<< HEAD
+  "name": "erpnext",
+  "description": "Open Source ERP System powered by the Frappe Framework",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/frappe/erpnext.git"
+  },
+  "homepage": "https://erpnext.com",
+  "author": "Frappe Technologies Pvt. Ltd.",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/frappe/erpnext/issues"
+  },
+  "devDependencies": {},
+  "dependencies": {
+    "onscan.js": "^1.5.2"
+  }
+}
+=======
+  "name": "uiapp",
+  "version": "1.0.0",
+  "description": "ui",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "cd frontend && yarn dev",
+    "build": "cd frontend && yarn build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
+>>>>>>> origin/main
