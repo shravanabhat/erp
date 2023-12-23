@@ -1,114 +1,71 @@
 <template>
-  <div class="max-w-3xl my-20 py-12 mx-60">
-    <div class="items-center justify-between flex">
-      <h1 class="text-3xl"><strong>List</strong></h1>
-      <Button icon-left="plus">New List</Button>
-    </div>
+  <div class="max-w-3xl py-12 mx-auto">
+    <Card title="SHRESHTA TECHNOLOGIES">
+      <form @submit.prevent="submitJournalEntry">
+        <div class="space-y-10">
+          <Input type="select" label="Transaction Type" :options="['Credit', 'Debit']" v-model="journalEntry.entry_type" required />
+          <Input type="number" label="Amount" v-model="journalEntry.amount" required />
+          <Input type="date" label="Date" v-model="journalEntry.posting_date" required />
+        </div>
 
-    <div class="mt-2 ">
-      <Card  title="General">
-        <ul>
-          <li class="flex justify-between" v-for="action in actions.data" :key="action.title">
+        <div class="mt-6">
+          <Button type="submit" variant="primary" icon-left="check">Submit</Button>
+        </div>
+      </form>
 
-          <span>   {{ action.title }} </span>
-            <Button @click="completeAction(action.name)" icon="check"></Button>
-           
-          
+   
+    </Card>
+
+    <ul>
+      <li v-for="entry in journalEntries.data" :key="entry.name">
+        {{ entry.name }} - {{ entry.title }} - {{ entry.voucher_type }} - {{ entry.company }} - {{ entry.posting_date }}
+        <ul v-if="entry.accounts && entry.accounts.data">
+          <li v-for="account in entry.accounts.data" :key="account.idx">
+            {{ account.account }} - {{ account.party_type }} - {{ account.party }} - {{ account.debit_in_account_currency }} - {{ account.credit_in_account_currency }}
           </li>
-          <Button @click="Dailogshown = true" icon-left="plus">New Task</Button>
-          {{ actiontask.data }}
         </ul>
-      </Card>
-    </div>
- <Dialog
-  :options="{
-    title: 'Add new Task',
-    size: 'xl',
-    actions: [
-      {
-        label: 'Add Task',
-        variant: 'solid',
-        onClick: () => {
-               addTask() },
-      },
-    ],
-  }"
-  v-model="Dailogshown"
->
-<template #body-content>
-    <div class="space-y-10">
-      <Input type="text" label="Title" placeholder="enter your task" v-model="action.title" required />
-      <Input type="select" :options="optionsss" label="category" v-model="action.category"/>
-      <Input type="date" v-model="action.due_date" label="Due Date"/>
-    </div>
-  </template>
-</Dialog>
+      </li>
+    </ul>
   </div>
 </template>
 
 <script setup>
-import { reactive } from 'vue';
-import { ref, onMounted , computed } from 'vue'
-import { createListResource, Card , Dialog, Input } from 'frappe-ui'
+import { ref, reactive } from 'vue';
+import { Card, Input, Button } from 'frappe-ui';
+import { createListResource } from 'frappe-ui';
 
-const Dailogshown = ref(false)
-
-const actions = createListResource({
-  doctype: 'Actions',
-  fields: ["name","title", "status", "description", "date", "due_date","task"],
-  filters: {
-    status: "To Do"
+const journalEntries = createListResource({
+  doctype: 'Journal Entry',
+  fields: ["*"],
+  limit: 10,
+  children: {
+    accounts: {
+      fields: ["account", "party_type", "party", "debit_in_account_currency", "credit_in_account_currency"],
+      limit: 10,
+    },
   },
-  limit: 10
-})
+});
+journalEntries.reload();
 
-//dynamically fetching doctypes and passing it to the select options
-const categories = createListResource({
-  doctype: 'Category',
-  fields: ["title"],
-  transform(categories){
-    return categories.map((c) => ({label:c.title, value:c.name}))
+const journalEntry = reactive({
+  company: '',
+  voucher_type: 'Journal Entry',
+  amount: 0,
+  posting_date: '',
+});
+
+let pdfLink = null;
+
+const submitJournalEntry = async () => {
+  try {
+    const response = await journalEntries.insert.submit(journalEntry);
+    if (response && response.data && response.data.name) {
+      generatePDFLink(response.data.name);
+    }
+  } catch (error) {
+    console.error('Error submitting journal entry:', error);
+    // Handle errors as needed
   }
-})
+};
 
-const optionsss =computed(() => {
-  if(categories.list.loading || !categories.data){
-    return []
-  }
- return categories.data
-})
-
-//change the value of the status in the original doctypes 
-const completeAction = (actionName) =>{
-  actions.setValue.submit({
-    name:actionName,
-    status:'Done'
-
-  })
-}
-
-
-//redirecting the add task menu
-const addTask = () =>{
-  actions.insert.submit(action)
-}
-
-const action = reactive({
-  title:'',
-  category:'General'
-})
-
-const actiontask = createListResource({
-  doctype: 'Action task',
-  fields: ["description","is_completed"],
-
-  limit: 10
-})
-
-
-onMounted(() => {
-  actions.reload()
-  categories.reload()
-  actiontask.reload()
-})
 </script>
